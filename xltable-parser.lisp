@@ -75,12 +75,6 @@
 	  :initform nil
 	  :documentation "The type that is not handled.")))
 
-(defmethod print-object ((object find-reader-error) stream)
-  (print-unreadable-object (object stream :type t :identity t)
-    (format stream "~& error: ~a ~a"
-	    (message-of object)
-	    (value-of object))))
-
 (defun find-reader-error (message &key value)
   (error 'find-reader-error
          :message message
@@ -103,6 +97,7 @@
 	  ,data))
 
 (defun get-function-to-read-xltable (stream)
+  "Return continuation, which read data from stream."
   (let ((cc nil)
 	(stream stream))
     (lambda ()
