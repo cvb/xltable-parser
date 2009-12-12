@@ -1,5 +1,6 @@
 (defpackage :xltable-parser
-  (:use :cl :binary-types :babel :cl-cont :ieee-floats))
+  (:use :cl :binary-types :babel :cl-cont :ieee-floats)
+  (:export get-function-to-read-xltable))
 
 (in-package :xltable-parser)
 
@@ -9,7 +10,7 @@
 (defconstant tdt-table 4) ;bytes, int
 (defconstant tdt-float 8) ;bytes, float
 (defconstant tdt-string nil) ;first byte contains length, not null terminated
-(defconstant tdt-bool 2) ;byte, why use word for these?
+(defconstant tdt-bool 2) ;bytes
 (defconstant tdt-error 2) ;0|7|15|23|29|36|42
 (defconstant tdt-blank 2) ;number of blank cells
 (defconstant tdt-int 2) 
@@ -55,9 +56,7 @@
 (defun read-tdt-string (stream)
   (let* ((len (read-binary 'u8 stream))
 	 (string-raw (make-array len :element-type '(unsigned-byte 8))))
-    (format t "~&read-tdt-string len: ~a" len) 
     (read-sequence string-raw stream)
-    (format t "~&read-tdt-string seq: ~a~%" string-raw)
     (octets-to-string string-raw :encoding :cp1251)))
     
 (defun find-data-size (type &optional len)
@@ -107,14 +106,16 @@
   (let ((cc nil)
 	(stream stream))
     (lambda ()
-      (if cc  (funcall cc))
-      (with-call/cc
-	(loop do (let* ((data-type (read-data-type stream))
-			(data-size (read-data-size stream))
-			(data nil))
-		   (loop while (not (= 0 data-size))
-		      do (progn (read-data data-type data-size data stream)
-				(call/cc 
-				 (lambda (k)
-				   (setf cc k)
-				   data))))))))))
+      (if cc  (funcall cc)
+	  (with-call/cc
+	    (loop 
+	       do (let* ((data-type (read-data-type stream))
+			 (data-size (read-data-size stream))
+			 (data nil))
+		    (loop while (not (= 0 data-size))
+		       do (progn (read-data data-type data-size data stream)
+				 (call/cc 
+				  (lambda (k)
+				    (setf cc k)
+				    data)))))))))))
+
