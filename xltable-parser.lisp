@@ -44,8 +44,8 @@
   (read-binary 'u16 stream))
 
 (defun read-tdt-table (stream)
-  ;; return (rows columns)
-  (list (read-binary 'u16 stream)
+  ;; return (rows . columns)
+  (cons (read-binary 'u16 stream)
 	(read-binary 'u16 stream)))
 
 (binary-types:define-unsigned u64 8)
