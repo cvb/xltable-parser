@@ -82,6 +82,7 @@
 
 
 (defun find-reader (type)
+  "Return reader for type"
   (cond 
     ((eql type tdttable) 'read-tdt-table)
     ((eql type tdtfloat) 'read-tdt-float)
@@ -89,6 +90,9 @@
     (t (find-reader-error "unhandled type" :value type))))
 
 (defmacro read-data (data-type size data stream)
+  "Actual data read is here, looks a bit ugly, but simple,
+I use macros here to change actual value binded to size and
+data when macros will be called."
   `(progn (setf ,data (funcall (find-reader ,data-type) ,stream)
 		,size (- ,size
 		  (if (stringp ,data) 
